@@ -16,6 +16,71 @@ Supported transactions: Withdrawal, Balance Inquiry, Deposit, Change PIN, Mini S
   - Terminal > Run Task... > `Run (java)`
 
 
+```mermaid
+classDiagram
+    class ATM {
+        -ATMState state
+        -Card currentCard
+        +insertCard(Card)
+        +enterPin(String)
+        +processTransaction(Transaction)
+        +ejectCard()
+    }
+    class ATMState {
+        <<interface>>
+        +insertCard(Card)
+        +enterPin(String)
+        +processTransaction(Transaction)
+        +ejectCard()
+    }
+    class BankService {
+        <<interface>>
+        +withdraw(Card, String)
+        +getBalance(Card)
+        +deposit(Card, int)
+        +changePin(Card, String)
+        +getWithdrawalFees(Card, int)
+    }
+    class Transaction {
+        <<interface>>
+        +getFees()
+        +execute()
+    }
+    class Card {
+        
+    }
+
+    ATMState <|-- IdleState
+    ATMState <|-- AuthenticateState
+    ATMState <|-- ProcessingState
+    ATMState <|-- WithdrawalTransaction
+    ATMState <|-- WithdrawalFee
+    ATMState <|-- DepositTransaction
+    ATMState <|-- ChangePinTransaction
+    ATMState <|-- MiniStatementTransaction
+
+    Transaction <|-- WithdrawalTransaction
+    Transaction <|-- WithdrawalFee
+    Transaction <|-- DepositTransaction
+    Transaction <|-- ChangePinTransaction
+    Transaction <|-- MiniStatementTransaction
+
+    ATM o-- ATMState
+    ATM o-- Card
+    ATM o-- Transaction
+    ATM o-- BankService
+    ATM o-- InputDevice
+    ATM o-- OutputDevice
+
+    BankService <|-- BankServiceImpl
+    BankService <|-- BankServiceProxy
+
+    Card "1" --o "1" BankService : uses
+    ATM "1" --o "1" BankService : uses
+
+
+
+
 <img width="973" height="266" alt="Screenshot 2025-09-27 154519" src="https://github.com/user-attachments/assets/16db7946-efe4-4410-98af-53ae0621a7a2" />
 
   
