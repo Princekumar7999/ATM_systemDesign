@@ -1,36 +1,57 @@
-{{ ... }}
 
-Logo: P
 
 ## Overview
-This project contains ONLY the ATM example (no Parking Lot). It demonstrates a crisp Java design using SOLID principles along with State, Strategy, and Proxy patterns.
+This project contains ONLY the ATM system design. It demonstrates a crisp Java design using SOLID principles along with State, Strategy, and Proxy patterns.
 Supported transactions: Withdrawal, Balance Inquiry, Deposit, Change PIN, Mini Statement.
 
-Package root: `src/com/scaler/atm/`
+
 
 ## How to Open in VS Code
-- Open the folder: `C:\Users\Scaler\CascadeProjects\atm-java` in VS Code.
-- If prompted, install the "Extension Pack for Java" for best experience.
+
+ install the "Extension Pack for Java" for best experience.
 
 ## How to Build and Run
 - Using VS Code tasks (recommended):
   - Terminal > Run Task... > `Build (javac)`
   - Terminal > Run Task... > `Run (java)`
-- Or with PowerShell from project root:
-```powershell
-javac -d out $(Get-ChildItem -Recurse -Filter *.java | ForEach-Object { $_.FullName })
-java -cp out com.scaler.atm.Main
-```
 
-Expected output shows: card insert -> PIN -> deposit -> withdrawal -> balance -> mini statement -> change pin -> eject.
 
 ## Class Diagram (ATM)
-```mermaid
-classDiagram
+
+   
+  classDiagram
     class ATM {
-{{ ... }}
-      +getName()
-      +execute(ctx)
+      - ATMState state
+      - Card currentCard
+      + insertCard(Card)
+      + enterPin(String)
+      + processTransaction(Transaction)
+      + ejectCard()
+    }
+
+    class ATMState {
+      <<interface>>
+      + insertCard(ctx, Card)
+      + enterPin(ctx, String)
+      + processTransaction(ctx, Transaction)
+      + ejectCard(ctx)
+    }
+
+    class ReadyState
+    class ValidatingState
+    class AuthenticatedState
+    class ProcessingState
+    class DispensingState
+    ATMState <|.. ReadyState
+    ATMState <|.. ValidatingState
+    ATMState <|.. AuthenticatedState
+    ATMState <|.. ProcessingState
+    ATMState <|.. DispensingState
+
+    class Transaction {
+      <<interface>>
+      + getName()
+      + execute(ctx)
     }
     class WithdrawalTransaction
     class BalanceInquiryTransaction
@@ -45,21 +66,30 @@ classDiagram
 
     class BankService {
       <<interface>>
-      +validatePin(Card, String)
-      +getBalance(Card)
-      +withdraw(Card, int)
-      +deposit(Card, int)
-      +changePin(Card, String)
-      +getMiniStatement(Card, int)
+      + validatePin(Card, String)
+      + getBalance(Card)
+      + withdraw(Card, int)
+      + deposit(Card, int)
+      + changePin(Card, String)
+      + getMiniStatement(Card, int)
     }
     class BankServiceImpl
     class BankServiceProxy
     BankService <|.. BankServiceImpl
     BankService <|.. BankServiceProxy
-{{ ... }}
+
+    class Card
+    class CardReader { <<interface>> }
+    class CashDispenser { <<interface>> }
+    class InputDevice { <<interface>> }
+    class ReceiptPrinter { <<interface>> }
+
+    ATM --> Card
+    ATM --> BankService
+    ATM --> CardReader
+    ATM --> CashDispenser
     ATM --> InputDevice
     ATM --> ReceiptPrinter
-```
 
 ## Files & Responsibilities
 - **`com.scaler.atm.Main`** — Wires dependencies and demonstrates a session by calling `ATM.insertCard()`, `enterPin()`, `processTransaction()` with various strategies, and `ejectCard()`.
@@ -106,7 +136,4 @@ classDiagram
 - **`ChangePinTransaction.execute(ctx)`** — Bank change pin -> print receipt.
 - **`MiniStatementTransaction.execute(ctx)`** — Print last N entries.
 
-## Extending
-- Add `TransferTransaction` by implementing `Transaction` and adding corresponding methods in `BankService`/impl.
-- Swap hardware with other implementations without touching `ATM`.
-CardReader`, `CashDispenser`, etc.
+
